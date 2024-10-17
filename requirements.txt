@@ -1,3 +1,5 @@
 streamlit
 groq
 google-search-results
+GROQ_API_KEY="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"
+SERPAPI_API_KEY="140c1343aabece33c0a94282ed4567e7e6fb95bff4d7f23925e5f1f4b42aba7c"
