@@ -2,4 +2,4 @@ streamlit
 groq
 google-search-results
 deep_translator
-
+langdetect
