@@ -32,7 +32,26 @@ def translate_if_needed(text):
         st.error(f"Translation error: {str(e)}")
         return text
 
-# ... (rest of the functions remain the same)
+def search_web(query):
+    params = {
+        "engine": "google",
+        "q": query,
+        "api_key": SERPAPI_API_KEY,
+        "num": 5
+    }
+    search = GoogleSearch(params)
+    results = search.get_dict()
+    
+    if "organic_results" in results:
+        return results["organic_results"][:5]
+    else:
+        return []
+
+def format_search_results(results):
+    formatted_results = []
+    for result in results:
+        formatted_results.append(f"Title: {result['title']}\nSnippet: {result['snippet']}\nLink: {result['link']}\n")
+    return "\n".join(formatted_results)
 
 def call_llama_groq_api(prompt, include_web_search=False):
     try:
@@ -61,9 +80,6 @@ def call_llama_groq_api(prompt, include_web_search=False):
         return chat_completion.choices[0].message.content, search_results
     except Exception as e:
         return f"Error: {str(e)}", []
-
-# ... (rest of the code remains the same)
-    
 
 # Input field for the user's question
 user_input = st.text_input("Enter your question (in English or Thanglish):")
