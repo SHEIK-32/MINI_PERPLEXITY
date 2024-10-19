@@ -2,52 +2,47 @@ import streamlit as st
 import os
 from groq import Groq
 from serpapi import GoogleSearch
-import requests
+from deep_translator import GoogleTranslator
 
 # Streamlit app title and description
-st.title("Enhanced Mini Perplexity - Powered by LLaMA 3.1 (70B) with Detailed Web Search")
-st.write("Ask me anything, and I'll generate a response using the LLaMA model and search the web for up-to-date information!")
+st.title("Enhanced Mini Perplexity - Now with Thanglish Support!")
+st.write("Ask me anything in English or Thanglish, and I'll generate a response using the LLaMA model and search the web for up-to-date information!")
 
 # Get the API keys from environment variables
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+SERPAPI_API_KEY = st.secrets["SERPAPI_API_KEY"]
 
-# Initialize Groq client
+# Initialize Groq client and Google Translator
 client = Groq(api_key=GROQ_API_KEY)
+translator = GoogleTranslator(source='auto', target='en')
 
-# Initialize session state to keep track of chat history (questions and answers)
+# Initialize session state to keep track of chat history
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
-def search_web(query):
-    params = {
-        "engine": "google",
-        "q": query,
-        "api_key": SERPAPI_API_KEY,
-        "num": 5  # Retrieve top 5 results
-    }
-    search = GoogleSearch(params)
-    results = search.get_dict()
-    
-    if "organic_results" in results:
-        return results["organic_results"][:5]
-    else:
-        return []
+def translate_if_needed(text):
+    try:
+        # Detect language
+        detected_lang = translator.detect(text)
+        if detected_lang != 'en':
+            return translator.translate(text)
+        return text
+    except Exception as e:
+        st.error(f"Translation error: {str(e)}")
+        return text
 
-def format_search_results(results):
-    formatted_results = []
-    for result in results:
-        formatted_results.append(f"Title: {result['title']}\nSnippet: {result['snippet']}\nLink: {result['link']}\n")
-    return "\n".join(formatted_results)
+# ... (rest of the functions remain the same)
 
 def call_llama_groq_api(prompt, include_web_search=False):
     try:
+        translated_prompt = translate_if_needed(prompt)
+        
         if include_web_search:
-            search_results = search_web(prompt)
+            search_results = search_web(translated_prompt)
             formatted_results = format_search_results(search_results)
-            enhanced_prompt = f"Based on the following web search results and your knowledge, please answer the question: '{prompt}'\n\nWeb search results:\n{formatted_results}\n\nYour response:"
+            enhanced_prompt = f"Based on the following web search results and your knowledge, please answer the question: '{translated_prompt}'\n\nWeb search results:\n{formatted_results}\n\nYour response:"
         else:
-            enhanced_prompt = prompt
+            enhanced_prompt = translated_prompt
             search_results = []
 
         chat_completion = client.chat.completions.create(
@@ -65,9 +60,10 @@ def call_llama_groq_api(prompt, include_web_search=False):
         return chat_completion.choices[0].message.content, search_results
     except Exception as e:
         return f"Error: {str(e)}", []
+    
 
 # Input field for the user's question
-user_input = st.text_input("Enter your question:")
+user_input = st.text_input("Enter your question (in English or Thanglish):")
 
 # Checkbox to enable/disable web search
 use_web_search = st.checkbox("Enable web search for up-to-date information")
