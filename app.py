@@ -3,6 +3,7 @@ import os
 from groq import Groq
 from serpapi import GoogleSearch
 from deep_translator import GoogleTranslator
+from langdetect import detect
 
 # Streamlit app title and description
 st.title("Enhanced Mini Perplexity - Now with Thanglish Support!")
@@ -23,7 +24,7 @@ if 'chat_history' not in st.session_state:
 def translate_if_needed(text):
     try:
         # Detect language
-        detected_lang = translator.detect(text)
+        detected_lang = detect(text)
         if detected_lang != 'en':
             return translator.translate(text)
         return text
@@ -60,6 +61,8 @@ def call_llama_groq_api(prompt, include_web_search=False):
         return chat_completion.choices[0].message.content, search_results
     except Exception as e:
         return f"Error: {str(e)}", []
+
+# ... (rest of the code remains the same)
     
 
 # Input field for the user's question
