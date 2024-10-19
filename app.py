@@ -21,18 +21,9 @@ translator = GoogleTranslator(source='auto', target='en')
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
-def is_tanglish(text):
-    """Detect if the text is likely Tanglish based on common Tamil words written in English"""
-    common_tanglish_words = [
-        'enna', 'naan', 'nama', 'epdi', 'enaku', 'unaku', 'vanakam', 'sollu', 
-        'illa', 'aama', 'seri', 'romba', 'konjam', 'venum', 'vandhu', 'podu',
-        'pannu', 'iruku', 'theriyum', 'puriyala', 'paathu'
-    ]
-    text_words = text.lower().split()
-    return any(word in common_tanglish_words for word in text_words)
-
 def translate_if_needed(text):
     try:
+        # Detect language
         detected_lang = detect(text)
         if detected_lang != 'en':
             return translator.translate(text)
@@ -64,26 +55,14 @@ def format_search_results(results):
 
 def call_llama_groq_api(prompt, include_web_search=False):
     try:
-        is_tanglish_query = is_tanglish(prompt)
         translated_prompt = translate_if_needed(prompt)
         
         if include_web_search:
             search_results = search_web(translated_prompt)
             formatted_results = format_search_results(search_results)
-            if is_tanglish_query:
-                enhanced_prompt = f"""Question in Tanglish: '{prompt}'
-                Web search results: {formatted_results}
-                Please respond in casual Tanglish style, mixing Tamil words written in English script with English words naturally.
-                Make it sound like a friendly conversation between Tamil speakers. Keep the technical information accurate but present it casually."""
-            else:
-                enhanced_prompt = f"Based on the following web search results and your knowledge, please answer the question: '{translated_prompt}'\n\nWeb search results:\n{formatted_results}\n\nYour response:"
+            enhanced_prompt = f"Based on the following web search results and your knowledge, please answer the question: '{translated_prompt}'\n\nWeb search results:\n{formatted_results}\n\nYour response:"
         else:
-            if is_tanglish_query:
-                enhanced_prompt = f"""Question in Tanglish: '{prompt}'
-                Please respond in casual Tanglish style, mixing Tamil words written in English script with English words naturally.
-                Make it sound like a friendly conversation between Tamil speakers. Keep the technical information accurate but present it casually."""
-            else:
-                enhanced_prompt = translated_prompt
+            enhanced_prompt = translated_prompt
             search_results = []
 
         chat_completion = client.chat.completions.create(
@@ -100,10 +79,7 @@ def call_llama_groq_api(prompt, include_web_search=False):
         )
         return chat_completion.choices[0].message.content, search_results
     except Exception as e:
-        if is_tanglish_query:
-            return "Aiyo, something wrong aayiduchi. Try pannunga once more!", []
-        else:
-            return f"Error: {str(e)}", []
+        return f"Error: {str(e)}", []
 
 # Input field for the user's question
 user_input = st.text_input("Enter your question (in English or Thanglish):")
@@ -146,4 +122,4 @@ if st.session_state.chat_history:
             st.write("**Web Sources:**")
             for idx, result in enumerate(chat['web_results'], 1):
                 st.write(f"{idx}. [{result['title']}]({result['link']})")
-        st.write("---")
+        st.write("---")  # Separator between questions
