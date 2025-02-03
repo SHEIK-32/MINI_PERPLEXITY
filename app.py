@@ -4,9 +4,10 @@ from groq import Groq
 from serpapi import GoogleSearch
 from deep_translator import GoogleTranslator
 from langdetect import detect
+import re
 
 # Streamlit app title and description
-st.title("Enhanced Mini Perplexity - Now with Thanglish Support!")
+st.title("Enhanced Mini Perplexity - Now with Proper Thanglish Support!")
 st.write("Ask me anything in English or Thanglish, and I'll generate a response using the LLaMA model and search the web for up-to-date information!")
 
 # Get the API keys from environment variables
@@ -21,13 +22,18 @@ translator = GoogleTranslator(source='auto', target='en')
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
+def is_thanglish(text):
+    """Detect if the text is in Thanglish (Tamil+English mix)."""
+    tamil_chars = re.findall(r'[஀-௿]', text)  # Unicode range for Tamil
+    english_chars = re.findall(r'[a-zA-Z]', text)
+    return bool(tamil_chars) and bool(english_chars)  # If both Tamil and English exist, it's Thanglish
+
 def translate_if_needed(text):
     try:
-        # Detect language
         detected_lang = detect(text)
-        if detected_lang != 'en':
-            return translator.translate(text)
-        return text
+        if detected_lang == 'ta':
+            return translator.translate(text)  # Translate only pure Tamil
+        return text  # If it's already English or Thanglish, return as is
     except Exception as e:
         st.error(f"Translation error: {str(e)}")
         return text
@@ -41,11 +47,7 @@ def search_web(query):
     }
     search = GoogleSearch(params)
     results = search.get_dict()
-    
-    if "organic_results" in results:
-        return results["organic_results"][:5]
-    else:
-        return []
+    return results.get("organic_results", [])[:5]
 
 def format_search_results(results):
     formatted_results = []
@@ -55,23 +57,20 @@ def format_search_results(results):
 
 def call_llama_groq_api(prompt, include_web_search=False):
     try:
-        translated_prompt = translate_if_needed(prompt)
-        
-        if include_web_search:
-            search_results = search_web(translated_prompt)
-            formatted_results = format_search_results(search_results)
-            enhanced_prompt = f"Based on the following web search results and your knowledge, please answer the question: '{translated_prompt}'\n\nWeb search results:\n{formatted_results}\n\nYour response:"
+        if is_thanglish(prompt):
+            enhanced_prompt = f"Respond in Thanglish only. User query: {prompt}"
         else:
-            enhanced_prompt = translated_prompt
-            search_results = []
+            translated_prompt = translate_if_needed(prompt)
+            if include_web_search:
+                search_results = search_web(translated_prompt)
+                formatted_results = format_search_results(search_results)
+                enhanced_prompt = f"Based on the web search results and your knowledge, answer the question: '{translated_prompt}'\n\nWeb search results:\n{formatted_results}\n\nYour response:"
+            else:
+                enhanced_prompt = translated_prompt
+                search_results = []
 
         chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": enhanced_prompt,
-                }
-            ],
+            messages=[{"role": "user", "content": enhanced_prompt}],
             model="llama-3.3-70b-versatile",
             max_tokens=500,
             temperature=0.7,
