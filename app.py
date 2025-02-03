@@ -72,7 +72,7 @@ def call_llama_groq_api(prompt, include_web_search=False):
                     "content": enhanced_prompt,
                 }
             ],
-            model="llama-3.1-70b-versatile",
+            model="llama-3.3-70b-versatile",
             max_tokens=500,
             temperature=0.7,
             top_p=0.9
