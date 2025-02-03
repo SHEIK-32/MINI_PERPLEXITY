@@ -71,7 +71,7 @@ def call_llama_groq_api(prompt, include_web_search=False):
 
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": enhanced_prompt}],
-            model="mixtral-8x7b",
+            model="mixtral-8x7b-32768",
             max_tokens=500,
             temperature=0.5,  # Lowered for more accurate responses
             top_p=0.8
