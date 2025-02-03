@@ -24,7 +24,7 @@ if 'chat_history' not in st.session_state:
 
 def is_thanglish(text):
     """Detect if the text is in Thanglish (Tamil+English mix)."""
-    tamil_chars = re.findall(r'[஀-௿]', text)  # Unicode range for Tamil
+    tamil_chars = re.findall(r'[\u0B80-\u0BFF]', text)  # Unicode range for Tamil
     english_chars = re.findall(r'[a-zA-Z]', text)
     return bool(tamil_chars) and bool(english_chars)  # If both Tamil and English exist, it's Thanglish
 
@@ -58,7 +58,7 @@ def format_search_results(results):
 def call_llama_groq_api(prompt, include_web_search=False):
     try:
         if is_thanglish(prompt):
-            enhanced_prompt = f"Respond in Thanglish accurately and naturally. Ensure the response maintains proper Tamil-English mix while preserving meaning. User query: {prompt}"
+            enhanced_prompt = f"Respond in Thanglish accurately and naturally, maintaining the Tamil-English mix. Do not translate, but generate a response in the same Thanglish style. User query: {prompt}"
         else:
             translated_prompt = translate_if_needed(prompt)
             if include_web_search:
@@ -71,7 +71,7 @@ def call_llama_groq_api(prompt, include_web_search=False):
 
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": enhanced_prompt}],
-            model="mixtral-8x7b-32768",
+            model="mixtral-8x7b",
             max_tokens=500,
             temperature=0.5,  # Lowered for more accurate responses
             top_p=0.8
