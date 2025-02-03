@@ -7,7 +7,7 @@ from langdetect import detect
 import re
 
 # Streamlit app title and description
-st.title("Enhanced Mini Perplexity - Now with Proper Thanglish Support!")
+st.title("Enhanced Mini Perplexity - Now with Improved Thanglish Support!")
 st.write("Ask me anything in English or Thanglish, and I'll generate a response using the LLaMA model and search the web for up-to-date information!")
 
 # Get the API keys from environment variables
@@ -58,7 +58,7 @@ def format_search_results(results):
 def call_llama_groq_api(prompt, include_web_search=False):
     try:
         if is_thanglish(prompt):
-            enhanced_prompt = f"Respond in Thanglish only. User query: {prompt}"
+            enhanced_prompt = f"Respond in Thanglish accurately and naturally. Ensure the response maintains proper Tamil-English mix while preserving meaning. User query: {prompt}"
         else:
             translated_prompt = translate_if_needed(prompt)
             if include_web_search:
@@ -71,10 +71,10 @@ def call_llama_groq_api(prompt, include_web_search=False):
 
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": enhanced_prompt}],
-            model="llama-3.3-70b-versatile",
+            model="mixtral-8x7b",
             max_tokens=500,
-            temperature=0.7,
-            top_p=0.9
+            temperature=0.5,  # Lowered for more accurate responses
+            top_p=0.8
         )
         return chat_completion.choices[0].message.content, search_results
     except Exception as e:
