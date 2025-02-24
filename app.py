@@ -1,19 +1,21 @@
 import streamlit as st
 import os
 from openai import OpenAI
-
-client = OpenAI(api_key=OPENAI_API_KEY)  # Import OpenAI library
+# Import OpenAI library
 from serpapi import GoogleSearch
 from deep_translator import GoogleTranslator
 from langdetect import detect
 import re
+
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=OPENAI_API_KEY) 
 
 # Streamlit app title and description
 st.title("Enhanced Mini Perplexity - Advanced Thanglish Support!")
 st.write("Ask me anything in English or Thanglish, and I'll generate a response using advanced NLP techniques and up-to-date web information!")
 
 # Get the API keys from Streamlit secrets
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+
 SERPAPI_API_KEY = st.secrets["SERPAPI_API_KEY"]
 
 # Set your OpenAI API key
