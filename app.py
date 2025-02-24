@@ -57,7 +57,7 @@ def format_search_results(results):
     ]
     return "\n".join(formatted_results)
 
-def call_gpt4_api(prompt, include_web_search=False):
+def call_gpt4o_api(prompt, include_web_search=False):
     try:
         # Determine if the prompt is Thanglish and adjust accordingly
         if is_thanglish(prompt):
@@ -79,9 +79,9 @@ def call_gpt4_api(prompt, include_web_search=False):
                 enhanced_prompt = translate_if_needed(prompt)
                 search_results = []
 
-        # Call the OpenAI GPT-4 API
+        # Call the OpenAI GPT-4o API using the correct endpoint and model name
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # Specify the GPT-4 model
+            model="gpt-4o",  # Updated to use GPT-4o per OpenAI docs
             messages=[{"role": "user", "content": enhanced_prompt}],
             max_tokens=500,
             temperature=0.7,
@@ -97,7 +97,7 @@ use_web_search = st.checkbox("Enable web search for up-to-date information")
 
 if user_input:
     with st.spinner("Generating response..."):
-        response_text, search_results = call_gpt4_api(user_input, include_web_search=use_web_search)
+        response_text, search_results = call_gpt4o_api(user_input, include_web_search=use_web_search)
         st.subheader("AI Response:")
         st.write(response_text)
         
