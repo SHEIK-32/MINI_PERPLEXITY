@@ -1,6 +1,8 @@
 import streamlit as st
 import os
-import openai  # Import OpenAI library
+from openai import OpenAI
+
+client = OpenAI(api_key=OPENAI_API_KEY)  # Import OpenAI library
 from serpapi import GoogleSearch
 from deep_translator import GoogleTranslator
 from langdetect import detect
@@ -15,7 +17,6 @@ OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 SERPAPI_API_KEY = st.secrets["SERPAPI_API_KEY"]
 
 # Set your OpenAI API key
-openai.api_key = OPENAI_API_KEY
 
 translator = GoogleTranslator(source='auto', target='en')
 
@@ -80,15 +81,13 @@ def call_gpt4o_api(prompt, include_web_search=False):
                 search_results = []
 
         # Call the OpenAI GPT-4o API using the correct endpoint and model name.
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",  # Updated to use GPT-4o per OpenAI docs
-            messages=[{"role": "user", "content": enhanced_prompt}],
-            max_tokens=500,
-            temperature=0.7,
-            top_p=0.9
-        )
+        response = client.chat.completions.create(model="gpt-4o",  # Updated to use GPT-4o per OpenAI docs
+        messages=[{"role": "user", "content": enhanced_prompt}],
+        max_tokens=500,
+        temperature=0.7,
+        top_p=0.9)
         # Use dictionary-style indexing per the new API format.
-        content = response['choices'][0]['message']['content']
+        content = response.choices[0].message.content
         return content, search_results
     except Exception as e:
         return f"Error: {str(e)}", []
@@ -102,14 +101,14 @@ if user_input:
         response_text, search_results = call_gpt4o_api(user_input, include_web_search=use_web_search)
         st.subheader("AI Response:")
         st.write(response_text)
-        
+
         if use_web_search and search_results:
             st.subheader("Web Search Results:")
             for idx, result in enumerate(search_results, 1):
                 with st.expander(f"Source {idx}: {result['title']}"):
                     st.write(f"**Snippet:** {result['snippet']}")
                     st.write(f"**Link:** {result['link']}")
-        
+
         st.session_state.chat_history.append({
             "question": user_input,
             "response": response_text,
@@ -121,7 +120,7 @@ if st.session_state.chat_history:
     st.write("### Chat History")
     for chat in st.session_state.chat_history:
         st.write(f"**You:** {chat['question']}")
-        st.write(f"**Assistant:** {chat['response']}")
+        st.write(f"**Assistant:** {chat.response}")
         if chat['web_results']:
             st.write("**Web Sources:**")
             for idx, result in enumerate(chat['web_results'], 1):
