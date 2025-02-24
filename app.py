@@ -79,7 +79,7 @@ def call_gpt4o_api(prompt, include_web_search=False):
                 enhanced_prompt = translate_if_needed(prompt)
                 search_results = []
 
-        # Call the OpenAI GPT-4o API using the correct endpoint and model name
+        # Call the OpenAI GPT-4o API using the correct endpoint and model name.
         response = openai.ChatCompletion.create(
             model="gpt-4o",  # Updated to use GPT-4o per OpenAI docs
             messages=[{"role": "user", "content": enhanced_prompt}],
@@ -87,7 +87,9 @@ def call_gpt4o_api(prompt, include_web_search=False):
             temperature=0.7,
             top_p=0.9
         )
-        return response.choices[0].message['content'], search_results
+        # Use dictionary-style indexing per the new API format.
+        content = response['choices'][0]['message']['content']
+        return content, search_results
     except Exception as e:
         return f"Error: {str(e)}", []
 
